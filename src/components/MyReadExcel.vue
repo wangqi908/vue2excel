@@ -60,7 +60,8 @@ export default {
                 obj[key] = "";
               }
             }
-            outputs.push(obj);
+            let isObjValueAllEmpty = Object.values(obj).every(v => v === ""); //判断对象的值全为空
+            if (!isObjValueAllEmpty) outputs.push(obj);
           });
           console.log(outputs);
           this.$emit("read-success", outputs);
