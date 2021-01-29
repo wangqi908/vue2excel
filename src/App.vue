@@ -1,11 +1,12 @@
 <template>
-  aa
+  <ExportExcel />
 </template>
 
 <script>
+import { ExportExcel } from './components'
 export default {
   name: 'App',
-  components: {}
+  components: { ExportExcel }
 }
 </script>
 
