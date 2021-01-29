@@ -10,7 +10,6 @@ export default {
   setup () {
     const { list } = require('./page.json')
     function exportExcel () {
-      console.log(2)
       useExportExcel(list)
     }
     function exportExcelWithStyle () {

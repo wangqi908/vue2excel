@@ -1,12 +1,13 @@
 <template>
   <ExportExcel />
+  <ReadExcel />
 </template>
 
 <script>
-import { ExportExcel } from './components'
+import { ExportExcel, ReadExcel } from './components'
 export default {
   name: 'App',
-  components: { ExportExcel }
+  components: { ExportExcel, ReadExcel }
 }
 </script>
 

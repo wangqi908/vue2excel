@@ -1,5 +1,6 @@
 import { saveAs } from 'file-saver'
-import XLSX from 'xlsx-style'
+import xlsxStyle from 'xlsx-style'
+import xlsx from 'xlsx'
 // https://www.npmjs.com/package/xlsx-style
 
 function dateNum (v, date1904) {
@@ -30,7 +31,7 @@ function sheetFromArrayOfArrays (data, opts) {
         v: data[R][C]
       }
       if (cell.v == null) continue
-      var cellRef = XLSX.utils.encode_cell({
+      var cellRef = xlsxStyle.utils.encode_cell({
         c: C,
         r: R
       })
@@ -39,14 +40,14 @@ function sheetFromArrayOfArrays (data, opts) {
       else if (typeof cell.v === 'boolean') cell.t = 'b'
       else if (cell.v instanceof Date) {
         cell.t = 'n'
-        cell.z = XLSX.SSF._table[14]
+        cell.z = xlsxStyle.SSF._table[14]
         cell.v = dateNum(cell.v)
       } else cell.t = 's'
 
       ws[cellRef] = cell
     }
   }
-  if (range.s.c < 10000000) ws['!ref'] = XLSX.utils.encode_range(range)
+  if (range.s.c < 10000000) ws['!ref'] = xlsxStyle.utils.encode_range(range)
   return ws
 }
 
@@ -113,14 +114,14 @@ export const getWb = ({
   if (merges.length > 0) {
     if (!ws['!merges']) ws['!merges'] = []
     merges.forEach(item => {
-      ws['!merges'].push(XLSX.utils.decode_range(item))
+      ws['!merges'].push(xlsxStyle.utils.decode_range(item))
     })
   }
 
   if (merges.length > 0) {
     if (!ws['!merges']) ws['!merges'] = []
     merges.forEach(item => {
-      ws['!merges'].push(XLSX.utils.decode_range(item))
+      ws['!merges'].push(xlsxStyle.utils.decode_range(item))
     })
   }
 
@@ -138,7 +139,7 @@ export const writeExcel = ({
   filename = 'excel-list',
   bookType = 'xlsx'
 }) => {
-  const wbOut = XLSX.write(wb, {
+  const wbOut = xlsxStyle.write(wb, {
     bookType: bookType,
     bookSST: false,
     type: 'binary'
@@ -319,4 +320,51 @@ export const exportJsonToExcel = ({
 }) => {
   wb = wb || getWb({ key, list, title, autoWidth, multiHeader, merges })
   writeExcel({ wb, filename, bookType })
+}
+
+/**
+ * @method 读取Excel文件
+ * @param params {}
+      file 文件
+      Sheet2JSONOpts Object 配置项
+        raw true Use raw values (true) or formatted strings (false)
+        range from WS Override Range (see table below) range: 0 从第0行开始
+        header Control output format (see table below)
+        dateNF FMT 14 Use specified date format in string output
+        defval Use specified value in place of null or undefined
+        blankrows ** Include blank lines in the output **
+ * @example
+      readExcel(files[0], { range: 0 }).then(res => {
+        console.log(res)
+        state.list = res
+      })
+  @return Promise
+ */
+export const readExcel = (file, Sheet2JSONOpts = {}) => {
+  const fileReader = new FileReader()
+  return new Promise((resolve, reject) => {
+    fileReader.onload = ev => {
+      try {
+        const data = ev.target.result
+        const workbook = xlsx.read(data, {
+          type: 'array'
+        })
+        const sheetNames = workbook.SheetNames
+        const res = []
+        sheetNames.forEach(name => {
+          const ws = xlsx.utils.sheet_to_json(
+            workbook.Sheets[name],
+            Sheet2JSONOpts
+          ) // 生成json表格内容
+          if (ws.length !== 0) res.push(ws)
+        })
+        // resolve(res.flat(Infinity))
+        resolve(res)
+      } catch (e) {
+        reject(e)
+        return false
+      }
+    }
+    fileReader.readAsArrayBuffer(file)
+  })
 }
